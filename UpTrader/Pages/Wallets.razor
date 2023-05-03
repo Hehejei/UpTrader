@@ -1,0 +1,65 @@
+﻿@page "/wallets"
+@using UpTrader.Data.DataWallet
+@using UpTrader.Data.Weather
+@inject WalletService walletService
+
+<PageTitle>Wallets</PageTitle>
+
+@if (wallets == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <InfiniteScroll ObserverTargetId="observerTarget" eventCallback="(e) => FetchWallets()">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Address</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var wallet in wallets)
+                {
+                    <tr>
+                        <td>@wallet.Id</td>
+                        <td>@wallet.Address</td>
+                        <td>@wallet.Balance</td>
+                    </tr>
+                }
+                <tr id="observerTarget"></tr>
+            </tbody>
+        </table>
+    </InfiniteScroll>
+}
+
+@code {
+    private List<WalletViewModel> wallets = new List<WalletViewModel>();
+    private int take = 100;
+    private int skip = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(FetchWallets);
+    }
+
+    private async Task FetchWallets()
+    {
+        var fetchedWallets = await walletService.GetWalletsAsync(take, skip);
+        wallets.AddRange(fetchedWallets);
+        skip += fetchedWallets.Count;
+
+        await Task.Run(async () =>
+        {
+            var nextFetchedWallets = await walletService.GetWalletsAsync(take, skip);
+            wallets.AddRange(nextFetchedWallets);
+            skip += nextFetchedWallets.Count;
+            await InvokeAsync(() =>
+            {
+                StateHasChanged();
+            });
+        });
+    }
+}
