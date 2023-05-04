@@ -8,16 +8,19 @@ using UpTrader.Data.DataWallet;
 
 public class WalletService
 {
-    private readonly DbCntx _dbContext;
+    private readonly IServiceProvider _serviceProvider;
 
-    public WalletService(DbCntx dbContext)
+    public WalletService(IServiceProvider serviceProvider)
     {
-        _dbContext = dbContext;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task<List<WalletViewModel>> GetWalletsAsync(int take, int skip)
     {
-        var wallets = await _dbContext.Wallets
+        using var scope = _serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DbCntx>();
+
+        var wallets = await dbContext.Wallets
             .OrderBy(w => w.Id)
             .Skip(skip)
             .Take(take)
