@@ -5,6 +5,12 @@
 
 <PageTitle>Wallets</PageTitle>
 
+<div class="mb-2">
+    <span>Сортировка по балансу:</span>
+    <button class="btn btn-sm btn-outline-primary" @onclick="() => SortByBalance(true)">От меньшего к большему</button>
+    <button class="btn btn-sm btn-outline-primary" @onclick="() => SortByBalance(false)">От большего к меньшему</button>
+</div>
+
 @if (wallets == null)
 {
     <p><em>Loading...</em></p>
@@ -39,6 +45,7 @@ else
     private List<WalletViewModel> wallets = new List<WalletViewModel>();
     private int take = 50;
     private int skip = 0;
+    private bool sortByAsc = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -61,5 +68,20 @@ else
                 StateHasChanged();
             });
         });
+
+        await SortByBalance(sortByAsc);
     }
+
+   private async Task SortByBalance(bool asc)
+   {
+        if (asc)
+        {
+            wallets = wallets.OrderBy(w => w.Balance).ToList();
+        }
+        else
+        {
+            wallets = wallets.OrderByDescending(w => w.Balance).ToList();
+        }
+        sortByAsc = asc;
+   }
 }
